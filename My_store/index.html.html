@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mechanical Tools Store</title>
+    <style>
+        /* --- GENERAL STYLES --- */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px; padding-bottom: 100px; transition: all 0.3s ease; }
+        
+        .lang-bar { text-align: right; margin-bottom: 20px; }
+        .lang-btn { padding: 8px 15px; cursor: pointer; border: 1px solid #333; background: white; font-weight: bold; }
+        .lang-btn:hover { background: #333; color: white; }
+
+        header { text-align: center; background: #333; color: white; padding: 20px; margin-bottom: 30px; border-radius: 8px; }
+
+        /* --- CATEGORY MENU STYLES --- */
+        .category-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .category-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .category-card:hover { transform: translateY(-5px); border: 2px solid #007bff; }
+
+        .cat-image { width: 100%; height: 250px; object-fit: cover; }
+        .cat-title { padding: 20px; font-size: 1.5em; font-weight: bold; color: #333; }
+
+        /* --- PRODUCT GRID STYLES (Initially Hidden) --- */
+        #product-view { display: none; } /* Hidden by default */
+
+        .back-btn-container { max-width: 1200px; margin: 0 auto 20px auto; }
+        .back-btn {
+            background: #555; color: white; border: none; padding: 10px 20px;
+            cursor: pointer; border-radius: 5px; font-size: 1em; display: flex; align-items: center; gap: 10px;
+        }
+        .back-btn:hover { background: #333; }
+
+        .product-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .product-image { width: 100%; height: 200px; object-fit: cover; }
+        .product-info { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }
+        .product-title { font-size: 1.2em; margin-bottom: 5px; font-weight: bold; }
+        .product-price { font-size: 1.4em; color: #d35400; font-weight: bold; margin-bottom: 10px; } /* Orange for tools */
+        .product-desc { font-size: 0.9em; color: #666; margin-bottom: 15px; }
+        
+        .add-btn {
+            margin-top: auto;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px;
+            width: 100%;
+            cursor: pointer;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .add-btn:hover { background-color: #0056b3; }
+
+        /* --- COMPACT FLOATING CART --- */
+        .cart-container {
+            position: fixed; bottom: 20px; right: 20px; width: 320px;
+            background: white; border-radius: 12px; 
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3); padding: 15px;
+            display: none; z-index: 1000; max-height: 80vh;
+            flex-direction: column; border: 1px solid #ddd;
+        }
+        .close-cart { align-self: flex-end; cursor: pointer; color: #999; font-weight: bold; font-size: 1.2em; margin-bottom: 5px; }
+        .cart-header { font-weight: bold; font-size: 1.1em; margin-bottom: 10px; display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding-bottom: 10px;}
+        .cart-items { margin-bottom: 15px; font-size: 0.9em; color: #555; max-height: 150px; overflow-y: auto; }
+        .cart-item-row { display: flex; justify-content: space-between; margin-bottom: 5px; border-bottom: 1px solid #f9f9f9; padding-bottom: 2px;}
+        .whatsapp-btn { background-color: #25D366; color: white; border: none; padding: 12px; width: 100%; font-size: 1em; font-weight: bold; cursor: pointer; border-radius: 5px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    </style>
+</head>
+<body>
+
+    <div class="lang-bar">
+        <button class="lang-btn" onclick="setLanguage('en')">English</button>
+        <button class="lang-btn" onclick="setLanguage('ar')">العربية</button>
+    </div>
+
+    <header>
+        <h1 id="site-title">Mechanical Pro Tools</h1>
+        <p id="site-subtitle">Professional Equipment for Professionals</p>
+    </header>
+
+    <div id="category-view" class="category-container">
+        <div class="category-card" onclick="openCategory('hand')">
+            <img src="https://images.unsplash.com/photo-1586864387967-d02ef85d93e8?w=600" class="cat-image">
+            <div class="cat-title" id="cat-hand">Hand Tools</div>
+        </div>
+        
+        <div class="category-card" onclick="openCategory('power')">
+            <img src="https://images.unsplash.com/photo-1504148455328-c376907d081c?w=600" class="cat-image">
+            <div class="cat-title" id="cat-power">Power Tools</div>
+        </div>
+
+        <div class="category-card" onclick="openCategory('auto')">
+            <img src="https://images.unsplash.com/photo-1487754180477-065369897d07?w=600" class="cat-image">
+            <div class="cat-title" id="cat-auto">Automotive Tools</div>
+        </div>
+    </div>
+
+    <div id="product-view">
+        <div class="back-btn-container">
+            <button class="back-btn" onclick="goHome()">
+                <span id="back-text">← Back to Categories</span>
+            </button>
+        </div>
+        <div class="product-container" id="store-display">
+            </div>
+    </div>
+
+    <div class="cart-container" id="cart-ui">
+        <span class="close-cart" onclick="toggleCart(false)">✕</span>
+        <div class="cart-header">
+            <span id="cart-title">Basket</span>
+            <span id="cart-total" style="color: #d35400;">0.00 JOD</span>
+        </div>
+        <div class="cart-items" id="cart-list"></div>
+        <button class="whatsapp-btn" onclick="checkoutOnWhatsapp()">
+            <span id="btn-text">Order via WhatsApp</span>
+        </button>
+        <p style="text-align: center; font-size: 0.75em; margin-top: 8px; color: #999;" id="wa-instruction">Click to open WhatsApp</p>
+    </div>
+
+    <script>
+        // ==========================================
+        //  1. CONFIGURATION
+        // ==========================================
+        const phoneNumber = "962785473775";
+
+        // *** IMPORTANT: Assign a 'type' to every item ***
+        // type: 'hand'   -> goes to Hand Tools
+        // type: 'power'  -> goes to Power Tools
+        // type: 'auto'   -> goes to Auto Tools
+        
+        const products = [
+            // --- HAND TOOLS ---
+            {
+                id: 1, type: 'hand', price: "15.00 JOD",
+                image: "https://images.unsplash.com/photo-1616423664037-16b65349e54a?w=400", 
+                en: { name: "Pro Wrench Set", desc: "12-piece steel wrench set (8mm - 24mm)." },
+                ar: { name: "طقم مفاتيح إنجليزي", desc: "طقم 12 قطعة فولاذية (8مم - 24مم)." }
+            },
+            {
+                id: 2, type: 'hand', price: "8.50 JOD",
+                image: "https://images.unsplash.com/photo-1530124566582-a618bc2615dc?w=400", 
+                en: { name: "Heavy Duty Hammer", desc: "Rubber grip hammer for heavy work." },
+                ar: { name: "مطرقة صلبة", desc: "مطرقة بمقبض مطاطي للأعمال الشاقة." }
+            },
+
+            // --- POWER TOOLS ---
+            {
+                id: 3, type: 'power', price: "45.00 JOD",
+                image: "https://images.unsplash.com/photo-1504148455328-c376907d081c?w=400", 
+                en: { name: "Electric Drill", desc: "20V Cordless drill with 2 batteries." },
+                ar: { name: "دريل كهربائي", desc: "دريل لاسلكي 20 فولت مع بطاريتين." }
+            },
+            {
+                id: 4, type: 'power', price: "35.00 JOD",
+                image: "https://images.unsplash.com/photo-1572981779307-38b8cabb2407?w=400", 
+                en: { name: "Angle Grinder", desc: "High speed grinder for cutting metal." },
+                ar: { name: "صاروخ قص (جلخ)", desc: "صاروخ عالي السرعة لقص المعادن." }
+            },
+
+            // --- AUTO TOOLS ---
+            {
+                id: 5, type: 'auto', price: "25.00 JOD",
+                image: "https://images.unsplash.com/photo-1487754180477-065369897d07?w=400", 
+                en: { name: "Hydraulic Jack", desc: "2-Ton car jack for easy lifting." },
+                ar: { name: "جك رفع سيارات", desc: "جك هيدروليكي حمولة 2 طن." }
+            },
+            {
+                id: 6, type: 'auto', price: "12.00 JOD",
+                image: "https://plus.unsplash.com/premium_photo-1664302152996-339892c5565f?w=400", 
+                en: { name: "Oil Filter Wrench", desc: "Adjustable wrench for oil filters." },
+                ar: { name: "مفتاح فلتر زيت", desc: "مفتاح قابل للتعديل لفلاتر الزيت." }
+            }
+        ];
+
+        // --- TRANSLATIONS ---
+        const siteText = {
+            en: { 
+                title: "Mechanical Pro Tools", subtitle: "Professional Equipment",
+                catHand: "Hand Tools", catPower: "Power Tools", catAuto: "Automotive Tools",
+                back: "← Back to Categories", add: "Add to Basket", cart: "Basket", order: "Order via WhatsApp",
+                wa: "Click to open WhatsApp"
+            },
+            ar: { 
+                title: "المعدات الميكانيكية الاحترافية", subtitle: "معدات احترافية للمحترفين",
+                catHand: "الأدوات اليدوية", catPower: "الأدوات الكهربائية", catAuto: "معدات السيارات",
+                back: "→ العودة للأقسام", add: "أضف للسلة", cart: "السلة", order: "اطلب عبر واتساب",
+                wa: "اضغط للفتح في واتساب"
+            }
+        };
+
+        // ==========================================
+        //  2. APP LOGIC
+        // ==========================================
+        let currentLang = 'en';
+        let cart = []; 
+
+        function setLanguage(lang) {
+            currentLang = lang;
+            document.body.dir = (lang === 'ar') ? "rtl" : "ltr";
+            
+            // Layout fixes for RTL
+            const cartUI = document.getElementById('cart-ui');
+            if(lang === 'ar') { cartUI.style.right = 'auto'; cartUI.style.left = '20px'; } 
+            else { cartUI.style.left = 'auto'; cartUI.style.right = '20px'; }
+
+            // Update Text
+            const t = siteText[lang];
+            document.getElementById('site-title').innerText = t.title;
+            document.getElementById('site-subtitle').innerText = t.subtitle;
+            document.getElementById('cat-hand').innerText = t.catHand;
+            document.getElementById('cat-power').innerText = t.catPower;
+            document.getElementById('cat-auto').innerText = t.catAuto;
+            document.getElementById('back-text').innerText = t.back;
+            document.getElementById('cart-title').innerText = t.cart;
+            document.getElementById('btn-text').innerText = t.order;
+            document.getElementById('wa-instruction').innerText = t.wa;
+
+            updateCartUI();
+            
+            // If we are currently looking at products, refresh them to update text
+            const productView = document.getElementById('product-view');
+            if (productView.style.display === 'block') {
+                // We need to know which category was open, but for simplicity
+                // we will just go home to avoid bugs in this simple version
+                goHome(); 
+            }
+        }
+
+        // --- NAVIGATION FUNCTIONS ---
+        function openCategory(selectedType) {
+            // 1. Hide Categories
+            document.getElementById('category-view').style.display = 'none';
+            // 2. Show Products
+            document.getElementById('product-view').style.display = 'block';
+            
+            // 3. Filter Items
+            const filteredItems = products.filter(p => p.type === selectedType);
+            renderProducts(filteredItems);
+        }
+
+        function goHome() {
+            // Show Categories, Hide Products
+            document.getElementById('category-view').style.display = 'grid';
+            document.getElementById('product-view').style.display = 'none';
+        }
+
+        function renderProducts(itemsToRender) {
+            const container = document.getElementById('store-display');
+            container.innerHTML = ''; 
+
+            if(itemsToRender.length === 0) {
+                container.innerHTML = '<p style="text-align:center; width:100%;">No items found in this category.</p>';
+                return;
+            }
+
+            itemsToRender.forEach(product => {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                const info = product[currentLang]; 
+
+                card.innerHTML = `
+                    <img src="${product.image}" alt="${info.name}" class="product-image">
+                    <div class="product-info">
+                        <div class="product-title">${info.name}</div>
+                        <div class="product-price">${product.price}</div>
+                        <div class="product-desc">${info.desc}</div>
+                        <button class="add-btn" onclick="addToCart(${product.id})">
+                            ${siteText[currentLang].add}
+                        </button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // --- CART FUNCTIONS (Same as before) ---
+        function addToCart(productId) {
+            const product = products.find(p => p.id === productId);
+            cart.push(product);
+            updateCartUI();
+            toggleCart(true); 
+        }
+
+        function toggleCart(show) {
+            document.getElementById('cart-ui').style.display = show ? 'flex' : 'none';
+        }
+
+        function updateCartUI() {
+            const cartList = document.getElementById('cart-list');
+            const cartTotal = document.getElementById('cart-total');
+            let total = 0;
+            let itemsHtml = '';
+            
+            cart.forEach(item => {
+                const priceNumber = parseFloat(item.price); 
+                total += priceNumber;
+                itemsHtml += `<div class="cart-item-row"><span>${item[currentLang].name}</span><span>${item.price}</span></div>`;
+            });
+
+            cartList.innerHTML = itemsHtml;
+            cartTotal.innerText = total.toFixed(2) + " JOD";
+        }
+
+        function checkoutOnWhatsapp() {
+            if (cart.length === 0) return;
+            let message = currentLang === 'ar' ? "مرحباً، أريد طلب:%0a" : "Hello, I want to order:%0a";
+            let total = 0;
+            cart.forEach(item => {
+                message += `- ${item.en.name} (${item.price})%0a`; 
+                total += parseFloat(item.price);
+            });
+            message += `-----------------%0aTotal: ${total.toFixed(2)} JOD`;
+            const url = `https://wa.me/${phoneNumber}?text=${message}`;
+            window.open(url, '_blank');
+        }
+    </script>
+</body>
+</html>

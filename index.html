@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trust for Tools | الثقة للأدوات</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* --- 1. التنسيقات العامة --- */
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap');
+        
+        :root {
+            --bg-color: #591f1f;
+            --card-bg: #1a2029;
+            --text-main: #f0f4f8;
+            --text-secondary: #9ca3af;
+            --accent-color: #f97316;
+            --border-color: #2d3748;
+            --radius: 12px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Tajawal', sans-serif; background-color: var(--bg-color); color: var(--text-main); padding-bottom: 100px; }
+
+        header { 
+            background: linear-gradient(135deg, #a99292 0%, #652a12 100%); 
+            padding: 2rem 1.5rem; text-align: center; margin-bottom: 2rem; 
+            border-bottom: 1px solid #333;
+        }
+        header h1 { font-size: 2.5rem; color: var(--accent-color); margin-bottom: 10px; text-transform: uppercase; }
+        
+        /* --- شريط البحث --- */
+        .search-container { max-width: 600px; margin: 0 auto 2rem auto; position: relative; display: flex; gap: 10px; padding: 0 1.5rem; }
+        .search-input {
+            width: 100%; padding: 15px 20px; border-radius: 50px; border: 2px solid var(--border-color);
+            background: var(--card-bg); color: white; font-family: 'Tajawal'; font-size: 1rem; outline: none;
+        }
+        .search-btn { background: var(--accent-color); color: white; border: none; border-radius: 50px; padding: 0 25px; cursor: pointer; font-weight: bold; white-space: nowrap; }
+
+        /* --- الشبكة والبطاقات --- */
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 1.5rem; }
+        .grid-layout { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1.5rem; }
+        @media (min-width: 768px) { .grid-layout { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); } }
+
+        .card {
+            background: var(--card-bg); border: 1px solid var(--border-color); border-radius: var(--radius);
+            overflow: hidden; transition: 0.3s; display: flex; flex-direction: column;
+        }
+        .card:hover { transform: translateY(-5px); border-color: var(--accent-color); }
+        
+        .card-img { 
+            width: 100%; height: 180px; object-fit: cover; background: #333; cursor: zoom-in;
+        }
+        
+        .card-body { padding: 1rem; display: flex; flex-direction: column; flex-grow: 1; }
+        .card-title { font-size: 1.1rem; font-weight: bold; margin-bottom: 0.3rem; }
+        .card-desc { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.8rem; line-height: 1.4; min-height: 40px; }
+        .card-price { color: var(--accent-color); font-weight: bold; font-size: 1.2rem; margin-bottom: 0.5rem; }
+        
+        .card-stock { 
+            font-size: 0.9rem; 
+            color: #10b981; 
+            margin-bottom: 1rem; 
+            display: flex; 
+            align-items: center;
+            gap: 5px;
+        }
+        .card-stock.low-stock { color: #ef4444; }
+        
+        .btn-add {
+            background: var(--accent-color); color: white; border: none; padding: 10px; width: 100%;
+            border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s;
+        }
+        .btn-add:active { transform: scale(0.95); }
+        .btn-add:disabled { 
+            background: #4b5563; 
+            cursor: not-allowed; 
+            opacity: 0.5; 
+        }
+
+        .btn-back {
+            background: #333; color: white; border: none; padding: 10px 20px; border-radius: 50px;
+            cursor: pointer; margin-bottom: 20px; display: inline-flex; align-items: center;
+        }
+
+        /* --- عارض الصور --- */
+        .image-viewer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 2000; display: none;
+            align-items: center; justify-content: center; flex-direction: column;
+        }
+        .image-viewer img { max-width: 90%; max-height: 80vh; border-radius: 8px; box-shadow: 0 0 20px rgba(255,255,255,0.1); }
+        .close-viewer {
+            position: absolute; top: 20px; right: 20px; color: white; font-size: 2rem; cursor: pointer; background: none; border: none;
+        }
+
+        /* --- السلة --- */
+        .cart-float-btn {
+            position: fixed; bottom: 30px; left: 30px; width: 60px; height: 60px;
+            background: var(--accent-color); border-radius: 50%; display: flex;
+            align-items: center; justify-content: center; font-size: 24px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.5); cursor: pointer; z-index: 999;
+        }
+        .cart-count {
+            position: absolute; top: -5px; right: -5px; background: red; color: white;
+            font-size: 12px; width: 22px; height: 22px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-weight: bold;
+        }
+        .cart-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 1000; display: none;
+            align-items: center; justify-content: center;
+        }
+        .cart-content {
+            background: #1f2937; width: 95%; max-width: 500px; max-height: 90vh;
+            border-radius: 15px; padding: 20px; display: flex; flex-direction: column;
+            border: 1px solid #4b5563; overflow-y: auto;
+        }
+        .cart-items-list { overflow-y: auto; flex-grow: 1; margin-bottom: 15px; border-top: 1px solid #333; border-bottom: 1px solid #333; padding: 10px 0; }
+        
+        .cart-item { 
+            display: flex; 
+            flex-direction: column;
+            padding: 12px; 
+            border-bottom: 1px solid #333; 
+            background: #2d3748;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .cart-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .cart-item-name { font-weight: bold; font-size: 1rem; }
+        .cart-item-details { display: flex; justify-content: space-between; align-items: center; margin-top: 5px; }
+        .cart-item-controls { display: flex; align-items: center; gap: 8px; background: #374151; border-radius: 6px; padding: 2px; }
+        .cart-item-controls button { background: #4b5563; color: white; border: none; width: 28px; height: 28px; border-radius: 4px; cursor: pointer; font-size: 1rem; font-weight: bold; }
+        .cart-item-controls button:disabled { opacity: 0.4; cursor: not-allowed; }
+        .cart-item-prices { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+        .cart-item-total-price { color: var(--accent-color); font-weight: bold; font-size: 1rem; }
+        .remove-item { background: #ef4444 !important; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; }
+        
+        .checkout-inputs label { display: block; margin-bottom: 5px; color: #ccc; font-size: 0.9rem; }
+        .checkout-inputs input { width: 100%; padding: 12px; margin-bottom: 15px; background: #111827; border: 1px solid #4b5563; color: white; border-radius: 5px; }
+        .whatsapp-btn { background: #25D366; color: white; border: none; padding: 14px; width: 100%; border-radius: 8px; font-weight: bold; font-size: 1.1rem; cursor: pointer; }
+
+        #product-view { display: none; }
+        
+        /* --- بطاقات التواصل المعدلة --- */
+        .contact-card { background: linear-gradient(135deg, #1e293b, #2d3748); border: 2px solid #25D366; }
+        .insta-card { background: linear-gradient(135deg, #1e293b, #2d3748); border: 2px solid #E1306C; }
+        .fb-card { background: linear-gradient(135deg, #1e293b, #2d3748); border: 2px solid #1877F2; }
+        
+        .contact-card .card-body, .insta-card .card-body, .fb-card .card-body { text-align: center; padding: 1.5rem; }
+        
+        .whatsapp-icon { font-size: 3rem; margin-bottom: 10px; color: #25D366; }
+        .insta-icon { font-size: 3rem; margin-bottom: 10px; color: #E1306C; }
+        .fb-icon { font-size: 3rem; margin-bottom: 10px; color: #1877F2; }
+        
+        .contact-phone { font-size: 1.2rem; color: #25D366; direction: ltr; margin: 10px 0; font-weight: bold; }
+        .social-text { color: #ccc; font-size: 0.9rem; margin-bottom: 10px; }
+        .click-hint { font-size: 0.85rem; font-weight: bold; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Trust for Tools</h1>
+        <p>المعدات الاحترافية - إربد</p>
+    </header>
+
+    <div class="search-container">
+        <input type="text" id="searchInput" class="search-input" placeholder="ابحث عن منتج..." onkeyup="if(event.key==='Enter') searchProducts()">
+        <button class="search-btn" onclick="searchProducts()">بحث 🔍</button>
+    </div>
+
+    <div class="container">
+        <div id="category-view" class="grid-layout">
+            <div class="card" onclick="openCategory('total')">
+                <!-- صورة أدوات TOTAL -->
+                <img src="https://sp-ao.shortpixel.ai/client/to_webp,q_glossy,ret_img,w_512/https://hawarastore.com/wp-content/uploads/2024/06/logo-totals.png" class="card-img" alt="أدوات TOTAL">
+                <div class="card-body"><div class="card-title" style="color: #ffbe00;">🛠️ أدوات TOTAL</div></div>
+            </div>
+
+            <div class="card" onclick="openCategory('sockets')">
+                <!-- صورة أطقم بكسات -->
+                <img src="https://www.jafarshop.com/cdn/shop/files/71U6JhWZb3L._AC_SL1500_1372x1113.jpg?v=1687027845" class="card-img" alt="أطقم بكسات">
+                <div class="card-body"><div class="card-title">🧰 أطقم بكسات</div></div>
+            </div>
+
+            <div class="card" onclick="openCategory('hand')">
+                <!-- صورة الأدوات اليدوية -->
+                <img src="https://media.zid.store/cdn-cgi/image/f=auto/https://media.zid.store/d7f1c6c4-9734-4ebc-b69c-ba17af9da1e0/e2b59508-5769-4eec-8201-1b8c028787fd.jpg" class="card-img" alt="يدوية">
+                <div class="card-body"><div class="card-title">🔧 الأدوات اليدوية</div></div>
+            </div>
+            
+            <div class="card" onclick="openCategory('power')">
+                <img src="https://images.pexels.com/photos/257736/pexels-photo-257736.jpeg?auto=compress&cs=tinysrgb&w=600" class="card-img" alt="كهربائية">
+                <div class="card-body"><div class="card-title">⚡ الأدوات الكهربائية</div></div>
+            </div>
+            
+            <div class="card" onclick="openCategory('auto')">
+                <img src="https://images.pexels.com/photos/4489714/pexels-photo-4489714.jpeg?auto=compress&cs=tinysrgb&w=600" class="card-img" alt="سيارات">
+                <div class="card-body"><div class="card-title">🚗 معدات السيارات</div></div>
+            </div>
+            
+            <div class="card" onclick="openCategory('cone')">
+                <img src="https://firstmold.com/wp-content/uploads/2024/08/lathe-featured-image.webp" class="card-img" alt="مخارط">
+                <div class="card-body"><div class="card-title">⭕ معدات مخارط</div></div>
+            </div>
+            
+            <div class="card" onclick="openCategory('general')">
+                <!-- تم إضافة الصورة الجديدة لقسم أدوات عامة من رابط سلا -->
+                <img src="https://cdn.salla.sa/YpojE/KqPBQnnzJp4t0qP42KolpxTlpX6dfLH1Qdi1uC32.jpg" class="card-img" alt="عامة">
+                <div class="card-body"><div class="card-title">🛠️ أدوات عامة</div></div>
+            </div>
+
+            <div class="card" onclick="openCategory('paint')">
+                <!-- صورة الدهانات -->
+                <img src="https://www.propertyfinder.eg/blog/wp-content/uploads/2019/05/Living-Room-Pink.jpg" class="card-img" alt="دهانات">
+                <div class="card-body"><div class="card-title" style="color: #38bdf8;">🎨 الدهانات</div></div>
+            </div>
+            
+            <div class="card" onclick="openCategory('offers')">
+                <img src="https://images.pexels.com/photos/5632398/pexels-photo-5632398.jpeg?auto=compress&cs=tinysrgb&w=600" class="card-img" alt="عروض">
+                <div class="card-body"><div class="card-title" style="color: var(--accent-color);">🔥 عروض حصرية</div></div>
+            </div>
+
+            <div class="card insta-card" onclick="window.open('https://www.instagram.com/store.tools.mayde?igsh=MTZrbDNzdmhpZ3ZuNg==', '_blank')">
+                <div class="card-body">
+                    <div class="insta-icon"><i class="fab fa-instagram"></i></div>
+                    <div class="card-title">تابعنا على إنستقرام</div>
+                    <p class="social-text">شاهد أحدث عروضنا وصور منتجاتنا اليومية</p>
+                    <div class="click-hint" style="color: #E1306C;">اضغط للزيارة</div>
+                </div>
+            </div>
+
+            <div class="card fb-card" onclick="window.open('https://www.facebook.com/share/1Gy9CupE1M/', '_blank')">
+                <div class="card-body">
+                    <div class="fb-icon"><i class="fab fa-facebook"></i></div>
+                    <div class="card-title">تابعنا على فيسبوك</div>
+                    <p class="social-text">انضم لمجتمعنا وكن أول من يعلم بالتخفيضات</p>
+                    <div class="click-hint" style="color: #1877F2;">اضغط للزيارة</div>
+                </div>
+            </div>
+            
+            <div class="card contact-card" onclick="window.open('https://wa.me/962785473775', '_blank')">
+                <div class="card-body">
+                    <div class="whatsapp-icon"><i class="fab fa-whatsapp"></i></div>
+                    <div class="card-title">تواصل معنا واتساب</div>
+                    <div class="contact-phone">0785473775</div>
+                    <p class="social-text">للاستفسارات والطلبات المباشرة</p>
+                    <div class="click-hint" style="color: #25D366;">اضغط للمحادثة</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="product-view">
+            <button class="btn-back" onclick="goHome()">← العودة للأقسام</button>
+            <h2 id="section-title" style="margin-bottom: 20px; color: var(--accent-color);"></h2>
+            <div id="products-grid" class="grid-layout"></div>
+        </div>
+    </div>
+
+    <div id="imageViewer" class="image-viewer" onclick="closeImage()">
+        <button class="close-viewer">×</button>
+        <img id="fullImage" src="" onclick="event.stopPropagation()">
+    </div>
+
+    <div class="cart-float-btn" onclick="toggleCart()">
+        🛒
+        <div id="cartCount" class="cart-count">0</div>
+    </div>
+
+    <div id="cartModal" class="cart-modal">
+        <div class="cart-content">
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                <h2>سلتك 🛒</h2>
+                <button onclick="toggleCart()" style="background:none; border:none; color:white; font-size:1.5rem;">✕</button>
+            </div>
+            <div id="cartItems" class="cart-items-list"></div>
+            <div class="checkout-inputs">
+                <div style="display:flex; justify-content:space-between; font-weight:bold; margin-bottom:15px; font-size:1.2rem;">
+                    <span>المجموع:</span>
+                    <span id="cartTotal" style="color:var(--accent-color)">0.00 دينار</span>
+                </div>
+                <label>الاسم الكريم:</label>
+                <input type="text" id="c-name" placeholder="الاسم الكريم">
+                <label>رقم الهاتف:</label>
+                <input type="number" id="c-phone" placeholder="07xxxxxxxx">
+                <label>العنوان:</label>
+                <input type="text" id="c-address" placeholder="المدينة - الحي">
+                <button class="whatsapp-btn" onclick="checkout()">✅ إتمام الطلب عبر واتساب</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- المنتجات والوظائف البرمجية ---
+
+        // أدوات TOTAL
+        const totalToolsList = [
+            { id: 801, type: 'total', name: 'فرد تبشيم TOTAL', desc: 'فرد تبشيم احترافي', price: 5, img: 'images/14.jpeg', stock: 10 },
+            { id: 802, type: 'total', name: 'درمل TOTAL', desc: 'درمل صنايعي 130 قطعة', price: 32, img: 'images/15.jpeg', stock: 10 },
+            { id: 30, type: 'total', name: 'درل بكسة TOTAL', desc: 'درل بكسة صنايعي 1350 نيوتن بطاريتين 5 أمبير', price: 175, img: 'images/16.jpeg', stock: 20 },
+            { id: 21, type: 'total', name: 'طقم شواكيش TOTAL', desc: 'طقم شواكيش متنوعة', price: 12, img: 'images/17.jpeg', stock: 5 },
+            { id: 22, type: 'total', name: 'طقم TOTAL', desc: 'طقم التوفير', price: 130, img: 'images/18.jpeg', stock: 3 },
+        ];
+
+        // أطقم بكسات
+        const socketToolsList = [
+            { id: 50, type: 'sockets', name: 'طقم بكسات احترافي 40 قطعة M H T', desc: '', price: 20, img: 'images/19.jpeg', stock:10 },
+            { id: 55, type: 'sockets', name: 'طقم بكسات صنايعي 43 قطعة G R D', desc: '', price:45, img: 'images/20.jpeg', stock:10 },
+            { id:200 , type: 'sockets', name: 'بكسات صنايعي 17 قطعة G R D', desc: '', price:28, img: 'images/21.jpeg', stock:10 },
+            { id: 201, type: 'sockets', name: 'طقم بكسات احترافي 108 قطعة ', desc: '', price:24, img: 'images/22.jpeg', stock:10 },
+            { id: 202, type: 'sockets', name: 'طقم بكسات احترافي 108 قطعة ', desc: '', price:19, img: 'images/23.jpeg', stock:10 },
+            { id: 203, type: 'sockets', name: 'طقم بكسات صنايعي 15 قطعة  ', desc: '', price:22, img: 'images/24.jpeg', stock:10 },
+            
+        ];
+
+        // الأدوات اليدوية
+        const handToolsList = [
+            { id: 101, type: 'hand', name: 'طقم مفكات احترافي', desc: 'طقم كامل 12 قطعة، رؤوس مغناطيسية.', price: 15, img: 'https://images.pexels.com/photos/205934/pexels-photo-205934.jpeg?auto=compress&cs=tinysrgb&w=400', stock: 11 },
+            { id: 1000, type: 'hand', name: 'طقم صيانة', desc: 'طقم صنايعي بجودة عالية', price: 10, img: 'https://images.pexels.com/photos/163126/pliers-tool-repair-work-163126.jpeg?auto=compress&cs=tinysrgb&w=400', stock: 5 },
+        ];
+
+        // الأدوات الكهربائية
+        const powerToolsList = [
+            { id: 201, type: 'power', name: 'صاروخ شحن', desc: 'صاروخ قص وجلخ احترافي ببطاريتين', price: 45, img: 'https://images.pexels.com/photos/257736/pexels-photo-257736.jpeg?auto=compress&cs=tinysrgb&w=400', stock: 4 },
+        ];
+
+        // معدات السيارات
+        const autoToolsList = [
+            { id: 301, type: 'auto', name: 'رافعة سيارة (جك)', desc: 'رافعة هيدروليك حمولة 2 طن.', price: 35, img: 'https://images.pexels.com/photos/4489714/pexels-photo-4489714.jpeg?auto=compress&cs=tinysrgb&w=400', stock: 4 },
+        ];
+
+        // معدات المخارط
+        const coneToolsList = [
+            { id: 401, type: 'cone', name: 'ريشة مخرطة فولاذية', desc: 'جودة صناعية عالية مقاومة للحرارة.', price: 12, img: 'https://firstmold.com/wp-content/uploads/2024/08/lathe-featured-image.webp', stock: 20 },
+        ];
+
+        // أدوات عامة - تم تغيير الصورة إلى الرابط الجديد من سلا
+        const generalToolsList = [
+            { id: 601, type: 'general', name: 'مفك براغي متعدد الرؤوس', desc: 'مفك براغي متعدد الاستخدامات مع رؤوس متنوعة', price: 15, img: 'https://cdn.salla.sa/YpojE/KqPBQnnzJp4t0qP42KolpxTlpX6dfLH1Qdi1uC32.jpg', stock: 20 }
+        ];
+
+        // قسم الدهانات
+        const paintToolsList = [
+            { id: 701, type: 'paint', name: 'بوية جدران بيضاء', desc: 'دهان داخلي قابل للغسل 5 لتر.', price: 25, img: 'https://www.propertyfinder.eg/blog/wp-content/uploads/2019/05/Living-Room-Pink.jpg', stock: 8 },
+        ];
+
+        // عروض حصرية
+        const offersList = [
+            { id: 501, type: 'offers', name: 'بكج التوفير', desc: 'مجموعة متكاملة من المعدات بأفضل سعر', price: 130, img: 'https://images.pexels.com/photos/5632398/pexels-photo-5632398.jpeg?auto=compress&cs=tinysrgb&w=400', stock: 1 },
+        ];
+
+        // دمج جميع القوائم
+        const products = [...totalToolsList, ...socketToolsList, ...handToolsList, ...powerToolsList, ...autoToolsList, ...coneToolsList, ...generalToolsList, ...paintToolsList, ...offersList];
+        let cart = [];
+
+        function openCategory(type) {
+            document.getElementById('category-view').style.display = 'none';
+            document.getElementById('product-view').style.display = 'block';
+            const filtered = products.filter(p => p.type === type);
+            const container = document.getElementById('products-grid');
+            container.innerHTML = ''; 
+            const titles = { 
+                'total':'🛠️ أدوات TOTAL',
+                'sockets':'🧰 أطقم البكسات', 
+                'hand':'🔧 اليدوية',
+                'power':'⚡ الكهربائية',
+                'auto':'🚗 السيارات',
+                'cone':'⭕ المخارط',
+                'general':'🛠️ عامة',
+                'paint':'🎨 الدهانات',
+                'offers':'🔥 عروض' 
+            };
+            document.getElementById('section-title').innerText = titles[type] || 'المنتجات';
+            filtered.forEach(p => {
+                container.innerHTML += `
+                <div class="card">
+                    <img src="${p.img}" class="card-img" onclick="viewImage('${p.img}')">
+                    <div class="card-body">
+                        <div class="card-title">${p.name}</div>
+                        <div class="card-desc">${p.desc}</div>
+                        <div class="card-price">${p.price} دينار</div>
+                        <div class="card-stock">متوفر: ${p.stock}</div>
+                        <button class="btn-add" onclick="addToCart(${p.id})">أضف للسلة +</button>
+                    </div>
+                </div>`;
+            });
+        }
+
+        function addToCart(id) {
+            const product = products.find(p => p.id === id);
+            const existing = cart.find(item => item.id === id);
+            if (existing) {
+                if (existing.qty < product.stock) existing.qty++;
+                else alert("وصلت للحد الأقصى للمخزون");
+            } else {
+                cart.push({ ...product, qty: 1 });
+            }
+            updateCartUI();
+        }
+
+        function increaseQty(id) {
+            const item = cart.find(i => i.id === id);
+            const product = products.find(p => p.id === id);
+            if (item && item.qty < product.stock) {
+                item.qty++;
+                updateCartUI();
+            } else {
+                alert("لا يمكن زيادة الكمية عن المتوفر في المخزون.");
+            }
+        }
+
+        function decreaseQty(id) {
+            const item = cart.find(i => i.id === id);
+            if (item && item.qty > 1) {
+                item.qty--;
+                updateCartUI();
+            } else if (item && item.qty === 1) {
+                removeFromCart(id);
+            }
+        }
+
+        function removeFromCart(id) { 
+            cart = cart.filter(i => i.id !== id); 
+            updateCartUI(); 
+        }
+
+        function updateCartUI() {
+            const count = cart.reduce((sum, item) => sum + item.qty, 0);
+            document.getElementById('cartCount').innerText = count;
+            
+            const container = document.getElementById('cartItems');
+            let total = 0;
+            
+            container.innerHTML = cart.map(item => {
+                const itemTotal = item.price * item.qty;
+                total += itemTotal;
+                return `
+                <div class="cart-item">
+                    <div class="cart-item-header">
+                        <span class="cart-item-name">${item.name}</span>
+                        <button class="remove-item" onclick="removeFromCart(${item.id})">حذف</button>
+                    </div>
+                    <div class="cart-item-details">
+                        <div class="cart-item-controls">
+                            <button onclick="decreaseQty(${item.id})" ${item.qty <= 1 ? 'disabled' : ''}>-</button>
+                            <span style="min-width: 20px; text-align: center;">${item.qty}</span>
+                            <button onclick="increaseQty(${item.id})" ${item.qty >= item.stock ? 'disabled' : ''}>+</button>
+                        </div>
+                        <div class="cart-item-prices">
+                            <span style="font-size: 0.8rem; color: #ccc;">${item.price} دينار × ${item.qty}</span>
+                            <span class="cart-item-total-price">${itemTotal.toFixed(2)} دينار</span>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+            
+            document.getElementById('cartTotal').innerText = total.toFixed(2) + ' دينار';
+        }
+
+        function toggleCart() { 
+            const m = document.getElementById('cartModal'); 
+            m.style.display = (m.style.display === 'flex') ? 'none' : 'flex'; 
+            if (m.style.display === 'flex') updateCartUI(); 
+        }
+        
+        function goHome() { 
+            document.getElementById('product-view').style.display = 'none'; 
+            document.getElementById('category-view').style.display = 'grid'; 
+        }
+        
+        function viewImage(s) { 
+            document.getElementById('fullImage').src = s; 
+            document.getElementById('imageViewer').style.display = 'flex'; 
+        }
+        
+        function closeImage() { 
+            document.getElementById('imageViewer').style.display = 'none'; 
+        }
+        
+        function checkout() {
+            const n = document.getElementById('c-name').value;
+            if(!n || cart.length === 0) return alert("أكمل البيانات والسلة");
+            let msg = `طلب جديد من: ${n}\n`;
+            cart.forEach(i => msg += `- ${i.name} (عدد: ${i.qty}) السعر: ${i.price * i.qty} دينار\n`);
+            window.open(`https://wa.me/962785473775?text=${encodeURIComponent(msg)}`);
+        }
+        
+        function searchProducts() {
+            const term = document.getElementById('searchInput').value.toLowerCase();
+            if(!term) { goHome(); return; }
+            
+            document.getElementById('category-view').style.display = 'none';
+            document.getElementById('product-view').style.display = 'block';
+            document.getElementById('section-title').innerText = 'نتائج البحث';
+            
+            const filtered = products.filter(p => p.name.toLowerCase().includes(term) || p.desc.toLowerCase().includes(term));
+            const container = document.getElementById('products-grid');
+            container.innerHTML = '';
+            
+            if(filtered.length === 0) {
+                container.innerHTML = '<p style="text-align:center; width:100%; grid-column: 1/-1;">عذراً، لم يتم العثور على منتجات مطابقة.</p>';
+                return;
+            }
+
+            filtered.forEach(p => {
+                container.innerHTML += `
+                <div class="card">
+                    <img src="${p.img}" class="card-img" onclick="viewImage('${p.img}')">
+                    <div class="card-body">
+                        <div class="card-title">${p.name}</div>
+                        <div class="card-desc">${p.desc}</div>
+                        <div class="card-price">${p.price} دينار</div>
+                        <div class="card-stock">متوفر: ${p.stock}</div>
+                        <button class="btn-add" onclick="addToCart(${p.id})">أضف للسلة +</button>
+                    </div>
+                </div>`;
+            });
+        }
+    </script>
+</body>
+</html>
